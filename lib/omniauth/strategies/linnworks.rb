@@ -43,21 +43,19 @@ module OmniAuth
         fail!(:invalid_credentials, e)
       end
 
-      def raw_info
-        @raw_info ||= JSON.parse(response.body)
-      end
-
       uid { raw_info['Id'].to_s }
 
       info { raw_info }
 
-      credentials do
-        {"token" => raw_info['Token'] }
-      end        
+      credentials { {"token" => raw_info['Token'] } }
       
       private 
 
       attr_reader :response
+      
+      def raw_info
+        @raw_info ||= JSON.parse(response.body)
+      end
 
     end
   end
