@@ -29,23 +29,18 @@ module OmniAuth
       end
 
       def callback_phase # rubocop:disable MethodLength
-        fail(OmniAuth::NoSessionError, "Session Expired") if session["oauth"].nil?
-
-        params = @env['omniauth.params']
-
         @response = Faraday.post('https://api.linnworks.net//api/Auth/AuthorizeByApplication', {"applicationId" => options.application_id, 
                                                                                       "applicationSecret" => options.application_secret,
-                                                                                      "token" => params['token']})
+                                                                                      "token" => request.params['token']})
 
         fail!(:error, Exception.new(JSON.parse(@response.body))) unless @response.success?
+        super
       rescue ::Timeout::Error => e
         fail!(:timeout, e)
       rescue ::Net::HTTPFatalError, ::OpenSSL::SSL::SSLError => e
         fail!(:service_unavailable, e)
       rescue ::OAuth::Unauthorized => e
         fail!(:invalid_credentials, e)
-      rescue ::OmniAuth::NoSessionError => e
-        fail!(:session_expired, e)
       end
 
       def raw_info
@@ -53,6 +48,8 @@ module OmniAuth
       end
 
       uid { raw_info['Id'].to_s }
+
+      info { raw_info }
 
       credentials do
         {"token" => raw_info['Token'] }
