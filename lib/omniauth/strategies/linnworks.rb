@@ -29,6 +29,8 @@ module OmniAuth
       end
 
       def callback_phase # rubocop:disable MethodLength
+        @auth_token = request.params['token']
+
         @response = Faraday.post('https://api.linnworks.net//api/Auth/AuthorizeByApplication', {"applicationId" => options.application_id, 
                                                                                       "applicationSecret" => options.application_secret,
                                                                                       "token" => request.params['token']})
@@ -48,10 +50,13 @@ module OmniAuth
       info { raw_info }
 
       credentials { {"token" => raw_info['Token'] } }
+
+      extra { {"auth_token" => auth_token } }
       
       private 
 
       attr_reader :response
+      attr_reader :auth_token
       
       def raw_info
         @raw_info ||= JSON.parse(response.body)
